@@ -1,0 +1,10 @@
+# Part 1 Answers
+
+See lab notebook (Project2.md) for information on setting up my Pixi environment
+
+Note: demultiplex.py script from 622 is unable to be run with fastq files as no corresponding index sequence fastq files were provided.
+
+Overall, both the forward and reverse reads between my two SRR datasets are very similar based on the analyses performed by FastQC.
+All the files are consistent in what FastQC flagged too- with per base sequence content having irregularities withint the first 10 bases suggesting that all the RNA sequences share a sequence motif in the beginning likely due to a primer bonding region or barcode. 
+All the files also were flagged for sequence duplication levels which is consistent with RNA since certain transcripts will be repeated due to being upregulated.
+Of note, all the files except SRR25630296_2.fastq were flagged for per tile sequence quality which could be worth looking into. 
