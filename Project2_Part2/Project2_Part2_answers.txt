@@ -1,0 +1,55 @@
+6. What proportion of reads (both R1 and R2) were trimmed?
+Below is the output from cutadapt for each of my SRR datasets. 99.1% of my total (R1 and R2) reads were able to have their adapters trimmed within the SRR25630296 dataset. 
+96.3% of my total (R1 and R2) reads were able to have their adapters trimmed within the SRR25630382 dataset.
+
+# SRR25630296
+Total basepairs processed: 13,160,188,500 bp
+  Read 1: 6,580,094,250 bp
+  Read 2: 6,580,094,250 bp
+Total written (filtered):  13,045,142,790 bp (99.1%)
+  Read 1: 6,522,268,610 bp
+  Read 2: 6,522,874,180 bp
+
+# SRR25630382
+Total basepairs processed: 2,092,781,400 bp
+  Read 1: 1,046,390,700 bp
+  Read 2: 1,046,390,700 bp
+Total written (filtered):  2,015,776,099 bp (96.3%)
+  Read 1: 1,006,872,613 bp
+  Read 2: 1,008,903,486 bp
+
+8. Comment on whether you expect R1s and R2s to be adapter-trimmed at different rates and why.
+Generally, there is not a big difference between my forward and reverse reads in both my SRR datasets.
+That being said, I looked into my slurm script output for trimmomatic and have the survival rates per read type:
+SRR25630296: Forward Only Surviving: 222531 (0.51%) Reverse Only Surviving: 139322 (0.32%)"
+SRR25630382: Forward Only Surviving: 48948 (0.70%) Reverse Only Surviving: 16611 (0.24%)
+Both my datasets have a lower number of reverse strands only surviving compared to forward only surviving. I did some research and 
+this is due to the default settings within trimmomatic dropping the reverse read if the insert size is below the threshold without the adapter sequence
+assuming the short insert has its reverse comp sequence preserved in the forward read.
+
+# Part 2 bash script
+
+#cutadapt
+# SRR25630296
+/usr/bin/time -v pixi run cutadapt -j 8 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o SRR25630296_1_cut.fastq.gz -p SRR25630296_2_cut.fastq.gz SRR25630296_1.fastq.gz SRR25630296_2.fastq.gz
+
+# SRR25630382
+/usr/bin/time -v pixi run cutadapt -j 8 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o SRR25630382_1_cut.fastq.gz -p SRR25630382_2_cut.fastq.gz SRR25630382_1.fastq.gz SRR25630382_2.fastq.gz
+
+# trimmomatic
+# SRR25630296
+/usr/bin/time -v pixi run trimmomatic PE -Xmx16g -threads 16 \
+SRR25630296_1_cut.fastq.gz SRR25630296_2_cut.fastq.gz \
+SRR25630296_1_trimmed.paired.fq.gz SRR25630296_1_trimmed.unpaired.fq.gz \
+SRR25630296_2_trimmed.paired.fq.gz SRR25630296_2_trimmed.unpaired.fq.gz \
+ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35
+
+# SRR25630382
+/usr/bin/time -v pixi run trimmomatic PE -Xmx16g -threads 16 \
+SRR25630382_1_cut.fastq.gz SRR25630382_2_cut.fastq.gz \
+SRR25630382_1_trimmed.paired.fq.gz SRR25630382_1_trimmed.unpaired.fq.gz \
+SRR25630382_2_trimmed.paired.fq.gz SRR25630382_2_trimmed.unpaired.fq.gz \
+ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35
+
+# bash pipeline to get length distributions for R plots
+zcat {zipped paired trimmomatic output file} | sed -n "2~4p" | awk '{print length($0)}' | sort
