@@ -84,7 +84,7 @@ Complete part2 of Project2
  
 **Results / Output:**
 
-[slurm script with cutadapt and trimmomatic code](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part2/part2.sh)
+[slurm script with cutadapt and trimmomatic code](./Project2_Part2/part2.sh)
 
 ```bash
 # sanity check of the adapter sequences in the files prior to trimming
@@ -144,7 +144,7 @@ Complete part3 of Project2
  
 **Results / Output:**
 
-[slurm script with gff file conversion and star database creation and alignment](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/star_run.sh)
+[slurm script with gff file conversion and star database creation and alignment](./Project2_Part3/star_run.sh)
 
 - gtf file: Project2_Part3/campylomormyrus.gtf
 - STAR database: Project2_Part3/camp_db/
@@ -152,7 +152,7 @@ Complete part3 of Project2
     - Project2_Part3/SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
     - Project2_Part3/SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
 
-[python script for SAM file mapping counts](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/SAM.parse.py)
+[python script for SAM file mapping counts](./Project2_Part3/SAM.parse.py)
 
 ```bash
 # Counting of mapped and unmapped reads from alignment sam files
@@ -164,13 +164,13 @@ Mapped reads: 82388670
 Unmapped reads: 664650
 Mapped reads: 13152004
 ``` 
-[htseq run script for SRR25630296 forward strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run1.sh)
+[htseq run script for SRR25630296 forward strand](./Project2_Part3/htseq_run1.sh)
 
-[htseq run script for SRR25630296 reverse strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run2.sh)
+[htseq run script for SRR25630296 reverse strand](./Project2_Part3/htseq_run2.sh)
 
-[htseq run script for SRR25630382 forward strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run3.sh)
+[htseq run script for SRR25630382 forward strand](./Project2_Part3/htseq_run3.sh)
 
-[htseq run script for SRR25630382 reverse strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run4.sh)
+[htseq run script for SRR25630382 reverse strand](./Project2_Part3/htseq_run4.sh)
 
 htseq output files:
 - SRR25630296 forward strand: SRR25630296.str.stv
