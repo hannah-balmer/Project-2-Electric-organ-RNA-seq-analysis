@@ -47,8 +47,12 @@ pixi shell
  
 **Goal for today:**
 Complete part1 of Project2: download SRR files with sra toolkit and perform fastqc analysis
+
  
-**Commands / scripts run:**
+**Results / Output:**
+
+all sra toolkit fastq file outputs and fastqc zipped output data stored in ./srr_data except for 4 output html files which are stored in ./Project2_Part1
+
 ```bash
 # within shell script ./Project2_Part1/srr_fetch_and_qc.sh
 # SRR datasets to be downloaded: SRR25630296, SRR25630382
@@ -60,11 +64,7 @@ prefetch SRR25630382
 fasterq-dump SRR25630382
 
 fastqc SRR*.fastq
-
 ``` 
- 
-**Results / Output:**
-all sra toolkit fastq file outputs and fastqc zipped output data stored in ./srr_data except for 4 output html files which are stored in ./Project2_Part1
 
 **Next steps:**
  part2
@@ -81,17 +81,17 @@ Complete part2 of Project2
 2. trimmomatic quality trimming
 3. plotting read length distributions in R
  
-**Commands / scripts run:**
-```bash
-# sanity check of the adapter sequences in the files
-# confirmed that both adapters are 3' adapters because they are at end of sequence with below bash command
-sed -n "2~4p" SRR25630296_1.fastq | grep -E "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
-sed -n "2~4p" SRR25630296_2.fastq | grep -E "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
-``` 
  
 **Results / Output:**
 
 [slurm script with cutadapt and trimmomatic code](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part2/part2.sh)
+
+```bash
+# sanity check of the adapter sequences in the files prior to trimming
+# confirmed that both adapters are 3' adapters because they are at end of sequence with below bash command
+sed -n "2~4p" SRR25630296_1.fastq | grep -E "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+sed -n "2~4p" SRR25630296_2.fastq | grep -E "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+``` 
 
 |Dataset|Tool|Time|%CPU|Memory|
 |---|---|---|---|---|
@@ -140,12 +140,22 @@ Complete part3 of Project2
 4. Perform STAR alignment with trimmed paired forward and reverse reads from part2 above
 5. Compute mapped/unmapped in each output SAM file
 6. Compute counts with htseq-count
- 
-**Commands / scripts run:**
-```bash
-# see all slurm scripts in Project2_Part3/star_run.sh
 
-# Counting of mapped and unmapped reads
+ 
+**Results / Output:**
+
+[slurm script with gff file conversion and star database creation and alignment](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/star_run.sh)
+
+- gtf file: Project2_Part3/campylomormyrus.gtf
+- STAR database: Project2_Part3/camp_db/
+- SAM file outputs: 
+    - Project2_Part3/SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
+    - Project2_Part3/SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
+
+[python script for SAM file mapping counts](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/SAM.parse.py)
+
+```bash
+# Counting of mapped and unmapped reads from alignment sam files
 ./SAM.parse.py -f ./SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
 Unmapped reads: 4583682
 Mapped reads: 82388670
@@ -154,33 +164,24 @@ Mapped reads: 82388670
 Unmapped reads: 664650
 Mapped reads: 13152004
 ``` 
- 
-**Results / Output:**
-|Step|Tool|Time|%CPU|Memory|
-|---|---|---|---|---|
-|GFF to GTF conversion|agat|19:29|97|27503676|
-|Database creation|STAR|4:45|453|22706468|
-|SRR25630296 alignment|STAR|6:57|1472|12789900|
-|SRR25630382 alignment|STAR|1:18|1324|12419780|
-|SRR25630296 stranded count |htseq|24:16|99|154660|
-|SRR25630296 reverse count |htseq|44:41|99|155060|
-|SRR25630382 stranded count |htseq|7:41|100|153896|
-|SRR25630382 reverse count |htseq|7:59|99|153376|
+[htseq run script for SRR25630296 forward strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run1.sh)
+
+[htseq run script for SRR25630296 reverse strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run2.sh)
+
+[htseq run script for SRR25630382 forward strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run3.sh)
+
+[htseq run script for SRR25630382 reverse strand](/projects/bgmp/hbalmer/bioinfo/Bi623/Project-2-Electric-organ-RNA-seq-analysis/Project2_Part3/htseq_run4.sh)
+
+htseq output files:
+- SRR25630296 forward strand: SRR25630296.str.stv
+- SRR25630296 reverse strand: SRR25630296.rev.tsv
+- SRR25630382 forward strand: SRR25630382.str.stv
+- SRR25630382 reverse strand: SRR25630382.rev.stv
 
 
-```bash
-# Counting of mapped and unmapped reads
-./SAM.parse.py -f ./SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
-Unmapped reads: 4583682
-Mapped reads: 82388670
-
-./SAM.parse.py -f ./SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
-Unmapped reads: 664650
-Mapped reads: 13152004
-```
 
 ```bash
-# Calculating %mapped
+# Calculating %mapped from htseq counts within forward and reverse strands
 
 #SRR25630296: reverse
 grep -v "__" SRR25630296.rev.tsv | awk '{sum += $2} END {print sum}'
@@ -213,9 +214,22 @@ awk '{sum += $2} END {print sum}' SRR25630382.str.tsv
 6908327
 
 186582/6908327 * 100 = 2.70%
+```
+
+|Step|Tool|Time|%CPU|Memory|
+|---|---|---|---|---|
+|GFF to GTF conversion|agat|19:29|97|27503676|
+|Database creation|STAR|4:45|453|22706468|
+|SRR25630296 alignment|STAR|6:57|1472|12789900|
+|SRR25630382 alignment|STAR|1:18|1324|12419780|
+|SRR25630296 stranded count |htseq|24:16|99|154660|
+|SRR25630296 reverse count |htseq|44:41|99|155060|
+|SRR25630382 stranded count |htseq|7:41|100|153896|
+|SRR25630382 reverse count |htseq|7:59|99|153376|
 
 ---
 **Next steps:**
+part 4
 
 ### 2026-mm-dd
  
