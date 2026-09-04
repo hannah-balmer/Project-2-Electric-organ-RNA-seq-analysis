@@ -31,6 +31,7 @@
 | star version | 2.7.10b |
 | matplotlib version | 3.11.1 |
 | htseq version | 2.1.2 |
+| agat version | 1.7.0 |
  
 **Environment setup notes:**
 ```bash
@@ -127,3 +128,161 @@ Length distributions data bash command and outputs
 **Next steps:**
  Part 3
 
+### 2026-09-03
+ 
+**Goal for today:**
+Complete part3 of Project2
+
+**Steps performed**
+1. Download Campylomormyrus compressirostris genome (fasta and gff) files
+2. Convert gff to gtf with agat
+3. Create STAR db with fasta and gtf files
+4. Perform STAR alignment with trimmed paired forward and reverse reads from part2 above
+5. Compute mapped/unmapped in each output SAM file
+6. Compute counts with htseq-count
+ 
+**Commands / scripts run:**
+```bash
+# see all slurm scripts in Project2_Part3/star_run.sh
+
+# Counting of mapped and unmapped reads
+./SAM.parse.py -f ./SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
+Unmapped reads: 4583682
+Mapped reads: 82388670
+
+./SAM.parse.py -f ./SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
+Unmapped reads: 664650
+Mapped reads: 13152004
+``` 
+ 
+**Results / Output:**
+|Step|Tool|Time|%CPU|Memory|
+|---|---|---|---|---|
+|GFF to GTF conversion|agat|19:29|97|27503676|
+|Database creation|STAR|4:45|453|22706468|
+|SRR25630296 alignment|STAR|6:57|1472|12789900|
+|SRR25630382 alignment|STAR|1:18|1324|12419780|
+|SRR25630296 stranded count |htseq|24:16|99|154660|
+|SRR25630296 reverse count |htseq|44:41|99|155060|
+|SRR25630382 stranded count |htseq|7:41|100|153896|
+|SRR25630382 reverse count |htseq|7:59|99|153376|
+
+
+```bash
+# Counting of mapped and unmapped reads
+./SAM.parse.py -f ./SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
+Unmapped reads: 4583682
+Mapped reads: 82388670
+
+./SAM.parse.py -f ./SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
+Unmapped reads: 664650
+Mapped reads: 13152004
+```
+
+```bash
+# Calculating %mapped
+
+#SRR25630296: reverse
+grep -v "__" SRR25630296.rev.tsv | awk '{sum += $2} END {print sum}'
+24281412
+awk '{sum += $2} END {print sum}' SRR25630296.rev.tsv
+43486176
+
+24281412/43486176 * 100 = 55.84%
+
+#SRR25630296: stranded
+grep -v "__" SRR25630296.str.stv | awk '{sum += $2} END {print sum}'
+1253838
+awk '{sum += $2} END {print sum}' SRR25630296.str.stv
+43486176
+
+24281412/43486176 * 100 = 2.88%
+
+#SRR25630382: reverse
+grep -v "__" SRR25630382.rev.tsv | awk '{sum += $2} END {print sum}'
+3524485
+awk '{sum += $2} END {print sum}' SRR25630382.rev.tsv
+6908327
+
+3524485/6908327 * 100 = 51.02%
+
+#SRR25630382: stranded
+grep -v "__" SRR25630382.str.tsv | awk '{sum += $2} END {print sum}'
+186582
+awk '{sum += $2} END {print sum}' SRR25630382.str.tsv
+6908327
+
+186582/6908327 * 100 = 2.70%
+
+---
+**Next steps:**
+
+### 2026-mm-dd
+ 
+**Goal for today:**
+
+**Steps performed**
+
+ 
+**Commands / scripts run:**
+```bash
+
+``` 
+ 
+**Results / Output:**
+
+---
+**Next steps:**
+
+### 2026-mm-dd
+ 
+**Goal for today:**
+
+**Steps performed**
+
+ 
+**Commands / scripts run:**
+```bash
+
+``` 
+ 
+**Results / Output:**
+
+
+**Next steps:**
+
+---
+### 2026-mm-dd
+ 
+**Goal for today:**
+
+**Steps performed**
+
+ 
+**Commands / scripts run:**
+```bash
+
+``` 
+ 
+**Results / Output:**
+
+
+**Next steps:**
+
+---
+### 2026-09-02
+ 
+**Goal for today:**
+
+**Steps performed**
+
+ 
+**Commands / scripts run:**
+```bash
+
+``` 
+ 
+**Results / Output:**
+
+---
+**Next steps:**

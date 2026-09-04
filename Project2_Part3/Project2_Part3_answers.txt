@@ -1,0 +1,55 @@
+15. Demonstrate convincingly whether or not the data are from "strand-specific" RNA-Seq libraries **and** which `stranded=` parameter 
+should you use for counting your reads for a future differential gene expression analyses. Include any commands/scripts used. 
+
+I believe my the data is strand-specific because my % mapped in my stranded=yes is much lower (~2%) than in my stranded=reverse runs (~50%). 
+Thus, I conclude that my coding strand is my "reverse" strand as that is where significantly more aligned reads mapped to which could not be simply due to chance.
+Going forward, I would use the stranded=reverse parameter for RNA-seq differential expression analyses.
+
+My calculation of percent mapped for my htseq outputs have 
+
+### Scripts ###
+GFF conversion, STAR db creation, alignment script: star_run.sh
+Python script for calculating mapped/unmapped reads: SAM.parse.py
+htseq scripts: htseq_run*.sh (4 scripts total)
+
+### Counting of mapped and unmapped reads ###
+./SAM.parse.py -f ./SRR25630296_alignment/SRR25630296.aligned.samAligned.out.sam
+Unmapped reads: 4583682
+Mapped reads: 82388670
+
+./SAM.parse.py -f ./SRR25630382_alignment/SRR25630382.aligned.samAligned.out.sam
+Unmapped reads: 664650
+Mapped reads: 13152004
+
+### Calculating %mapped ###
+#SRR25630296: reverse
+grep -v "__" SRR25630296.rev.tsv | awk '{sum += $2} END {print sum}'
+24281412
+awk '{sum += $2} END {print sum}' SRR25630296.rev.tsv
+43486176
+
+24281412/43486176 * 100 = 55.84%
+
+#SRR25630296: stranded
+grep -v "__" SRR25630296.str.stv | awk '{sum += $2} END {print sum}'
+1253838
+awk '{sum += $2} END {print sum}' SRR25630296.str.stv
+43486176
+
+24281412/43486176 * 100 = 2.88%
+
+#SRR25630382: reverse
+grep -v "__" SRR25630382.rev.tsv | awk '{sum += $2} END {print sum}'
+3524485
+awk '{sum += $2} END {print sum}' SRR25630382.rev.tsv
+6908327
+
+3524485/6908327 * 100 = 51.02%
+
+#SRR25630382: stranded
+grep -v "__" SRR25630382.str.tsv | awk '{sum += $2} END {print sum}'
+186582
+awk '{sum += $2} END {print sum}' SRR25630382.str.tsv
+6908327
+
+186582/6908327 * 100 = 2.70%
