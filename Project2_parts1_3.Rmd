@@ -52,7 +52,9 @@ Create a folder called Project2_Part1 on your git repo. **Upload all of your ans
 3.  Run your quality score plotting script from your Demultiplexing assignment in Bi622. (Make sure you're using the "running sum" strategy!!) Describe how the `FastQC` quality score distribution plots compare to your own. If different, propose an explanation. Also, does the run time differ? Mem/CPU usage? If so, why?
 
 4.  Comment on the overall data quality of your two libraries. Go beyond per-base qscore distributions. Examine the `FastQC` [documentation](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/) for guidance on interpreting results and planning next steps. Make and justify a recommendation on whether these data are of high enough quality to use for further analysis.
+    No more than 2 sentences per file, no need to break down each plot
 
+    
 ## Part 2 Adaptor trimming comparison, DUE 8/31
 
 Create a folder called Project2_Part2 on your git repo. **Upload all of your answers and bash code from this section to Project2_Part2/Project2_Part2_answers.txt. Upload any R code to Project2_Part2/Project2_Part2_answers.R. Upload any plots created in this section to Project2_Part2 and give them detailed names.**
