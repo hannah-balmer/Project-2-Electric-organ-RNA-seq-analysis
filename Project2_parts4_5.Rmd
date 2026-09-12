@@ -1,9 +1,11 @@
 ---
 title: "Project 2, parts 4 and 5: RNA-seq analysis"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2025-05-08"
-editor_options: 
-  markdown: 
+editor_options:
+  markdown:
     wrap: 72
 ---
 
@@ -58,7 +60,7 @@ other packages, but we cannot guarantee support for other packages.
     expression between the electric organ and skeletal muscle. Write the
     null hypothesis for this goal below.
 
-[Write the null hypothesis here]
+[There is no difference in gene expression between the electric organ and skeletal tissue.]
 
 1.  Load your data into DESeq2
 
@@ -72,10 +74,32 @@ other packages, but we cannot guarantee support for other packages.
   to load your data.
 
 ```{r}
-#Include your commands, remember that you might not need to load all of the count files for this hypothesis
+library(edgeR)
+library(limma)
+library(Glimma)
+library(ggplot2)
+library(RColorBrewer)
+library(DESeq2)
+library(apeglm)
+library(tools)
+library(qvalue)
+library(dplyr)
+library(data.table)
+library(pheatmap)
+library(PoiClaClu)
+library(glmpca)
+library(tibble)
+library(ashr)
 ```
 
-[Explain the logic behind your design formula]
+```{r}
+#Include your commands, remember that you might not need to load all of the count files for this hypothesis
+
+# Load metadata
+metadata = read.csv("./Project2_Part4/Project2_RNAseq_metadata_campy.csv")
+```
+
+[My design formula is ~SpeciesSmaller + Tissue + Species_Smaller:Tissue. I am interested in seeing how the the gene expression varies between species while also controlling for tissue. I have also included in my design formula ("SpeciesSmaller:Tissue") an assumption that the expression effect of species is impacted by tissue since the tissue inherently varies by the individual it was sourced from. I am working in tandem with Zach on this as he is doing this exact design formula without this extra ':' statement so we can compare our results.]
 
 2.  Filter the dataset to remove genes that are lowly expressed
 
@@ -85,10 +109,24 @@ other packages, but we cannot guarantee support for other packages.
 - Describe why you used your filtering strategy
 
 ```{r}
-#Include your commands
+#Filter out all the baby fish since they don't have skeletal tissue
+metadata = subset(metadata, metadata$AgeSize == "adult")
+
+Campy = DESeqDataSetFromHTSeqCount(metadata,directory="Project2_Part4/counts_tar",design=~SpeciesSmaller+Tissue+SpeciesSmaller:Tissue)
 ```
 
-[Specify which approach you chose and why]
+```{r}
+# Obtain CPMs
+myCPM <- cpm(Campy)
+# Which values in myCPM are greater than 0.5?
+thresh <- myCPM > 0.5
+# we would like to keep genes that have at least 2 TRUES in each row of thresh
+keep <- rowSums(thresh) >= 2
+# Subset the rows of count data to keep the more highly expressed genes
+Campy <- Campy[keep,]
+```
+
+[I chose the counts per million approach because, similar to the study, we removed low count transcripts and only kept transcripts whose expression was above in cpm threshold in at least two separate samples. This is important to ensure that every highly expressed gene has a "replicate" in another sample to filter out outliers unique to specific samples. Unlike the study I didn't pass in a specific count threshold (they passed in 10), I used a cpm ratio of 0.5 instead per the Bear study example. Using a cpm ratio is a bit more flexible than passing in a hard count so you can eliminate low count transcripts relative to the size of the transcriptome.]
 
 3.  Normalize the dataset and run differential expression analysis
 
@@ -97,7 +135,8 @@ other packages, but we cannot guarantee support for other packages.
   workflow 5.1.
 
 ```{r}
-#Include your commands
+# Normalize the data
+Campy = DESeq(Campy)
 ```
 
 4.  Normalize the data to use for dimensionality reduction
@@ -107,10 +146,10 @@ other packages, but we cannot guarantee support for other packages.
 - Describe why the rlog transformation is performed
 
 ```{r}
-#Include your commands
+Campy_rlog = rlog(Campy, blind = FALSE)
 ```
 
-[Write a description on the rlog transformation]
+[We used the rlog function to normalize the data in preparation to conduct and plot a principal component analysis. Without log normalization, the genes with the highest counts (and thus the highest expression) would be over-represented in these analyses and would mask any findings from the lesser expressed genes.]
 
 5.  Identify distances between samples using sample distance heatmaps
 
@@ -127,14 +166,33 @@ to follow along. If R tells you to restart your session listen to it.
 
 ```{r}
 #Include your commands for generating the Euclidean distance heatmap and dendrogram with the rlog data
+campyDists = dist(t(assay(Campy_rlog)))
+
+campyDistMatrix = as.matrix(campyDists)
+rownames(campyDistMatrix) = paste(Campy_rlog$SpeciesSmaller, Campy_rlog$Tissue, sep = " - " )
+colnames(campyDistMatrix) = NULL
+colors <- colorRampPalette(rev(brewer.pal(9, "Greens")) )(255)
+pheatmap(campyDistMatrix,
+         clustering_distance_rows = campyDists,
+         clustering_distance_cols = campyDists,
+         col = colors)
 ```
 
 ```{r}
 #Include your commands for generating the Poisson distance heatmap with dendrogram using your original count matrix
+
+campyPois = PoissonDistance(t(counts(Campy)))
+
+campyPoisDistMatrix = as.matrix(campyPois$dd)
+rownames(campyPoisDistMatrix) = paste(Campy$SpeciesSmaller, Campy$Tissue, Campy$SRRfile, sep=" - " )
+colnames(campyPoisDistMatrix) = NULL
+pheatmap(campyPoisDistMatrix,
+         clustering_distance_rows = campyPois$dd,
+         clustering_distance_cols = campyPois$dd,
+         col = colors)
 ```
 
-[Describe the two heatmaps and what they are measuring (Any outliers? Do
-the plots have the same interpretation?)]
+[Both of these heatmaps are visualizing the clusters of expression differences in a matrix format. That's why there is a diagonal line through it- it represents the expression difference between identical samples, thus why it is 0. The plots both show that the EO and SM tissues are clustering together with the exception of one sample (Cco-SM) that is clustering with the EO samples in both plots. Of note, the Poisson plot displays more noise than the Euclidean plot.]
 
 6.  Examine similarity in sample global gene expression using PCA,
     Generalized PCA, and MDS plots.
@@ -146,11 +204,30 @@ the plots have the same interpretation?)]
 - Briefly describe each approach and their findings.
 
 ```{r}
-#Include commands on generating PCA, generalized PCA, and MDS plots
+#PCA
+plotPCA(Campy_rlog, intgroup = c("Tissue", "SpeciesSmaller"))
+
 ```
 
-[Describe appropriateness of methods, their approaches, and their
-findings]
+```{r}
+# Generalized PCA
+gpca <- glmpca(counts(Campy), L=2)
+gpca.dat <- gpca$factors
+gpca.dat$SpeciesSmaller <- Campy$SpeciesSmaller
+gpca.dat$Tissue <- Campy$Tissue
+ggplot(gpca.dat, aes(x = dim1, y = dim2, color = SpeciesSmaller, shape = Tissue)) +
+  geom_point(size =3) + coord_fixed() + ggtitle("Generalized PCA of Species and Tissue Type")
+```
+
+```{r}
+# MDS plots
+mds <- as.data.frame(colData(Campy_rlog))  %>%
+         cbind(cmdscale(campyDistMatrix))
+ggplot(mds, aes(x = `1`, y = `2`, color = SpeciesSmaller, shape = Tissue)) +
+  geom_point(size = 3) + coord_fixed() + ggtitle("MDS with Campy data")
+```
+
+[All of the above approaches cluster very clearly between tissue types with the exception of the deviant skeletal muscle sample. However, they don't all differ between species equally. The MDS plot (which is the plot the researchers ended up putting in their paper) provides the clearest clustering between species followed by the PCA which mildly follows a similar clustering pattern and then the generalized PCA doesn't visualize any clustering between species. The regular PCA assumes your data follows a normal distribution while the generalized PCA does not assume this whereas the MDS approach specifically is designed for examining a distance matrix to compute pair-wise distances. The distance matrix we calculated for the heatmaps above is perfect for an MDS plot.]
 
 7.  Use your dimensionality reduction plots, evaluate sample quality and
     complete quality adjustments.
@@ -160,9 +237,30 @@ findings]
 - If so, remove them now, repeat steps of loading in data, filtering,
   normalization, and running the differential expression analysis.
 
-[Describe your answer. If you identify a problem, then include the code
-used to repeat the initial data loading, filtering, normalization, and
-DE steps]
+[There is one skeletal muscle sample that consistently clustered with the electric organ samples in every dimensionality plot, so I would want to remove this sample from my metadata. See code below for this and recomputing all the calculations without it.]
+
+```{r}
+# Redo calculations without deviant skeletal muscle sample from SRR25630366 dataset
+
+metadata = filter(metadata, metadata$SRRfile != "SRR25630366")
+
+Campy = DESeqDataSetFromHTSeqCount(metadata,directory="Project2_Part4/counts_tar",design=~SpeciesSmaller+Tissue+SpeciesSmaller:Tissue)
+
+# Obtain CPMs
+myCPM <- cpm(Campy)
+# Which values in myCPM are greater than 0.5?
+thresh <- myCPM > 0.5
+# we would like to keep genes that have at least 2 TRUES in each row of thresh
+keep <- rowSums(thresh) >= 2
+# Subset the rows of count data to keep the more highly expressed genes
+Campy <- Campy[keep,]
+
+# Normalize
+Campy = DESeq(Campy)
+
+# Normalize for dimension reduction
+Campy_rlog = rlog(Campy, blind = FALSE)
+```
 
 8.  Identify genes that are differentially expressed between SM and EO
     tissues in EVERY species comparison.
@@ -184,7 +282,91 @@ DE steps]
     logfold changes
 
 ```{r}
-## YOUR CODE HERE
+## Generation of result tables
+
+# CCO
+CCO = data.frame(lfcShrink(dds = Campy, coef = "Tissue_SM_vs_EO"), type = "ashr") %>%
+  rownames_to_column(var = "genes") %>%
+  filter(padj < 0.05) %>%
+  filter(abs(log2FoldChange) > 1) %>%
+  rename("CcoLog2FoldChange" = "log2FoldChange", "Ccopadj" = "padj") %>%
+  select(genes, CcoLog2FoldChange, Ccopadj)
+
+# CCO x CRH 
+CCOxCRH = data.frame(lfcShrink(dds = Campy, contrast = list(c("SpeciesSmallerCcoxCrh.TissueSM", "Tissue_SM_vs_EO")), type = "ashr")) %>%
+  rownames_to_column(var = "genes") %>%
+  filter(padj < 0.05) %>%
+  filter(abs(log2FoldChange) > 1) %>%
+  rename("CcoxCrhLog2FoldChange" = "log2FoldChange", "CcoxCrhpadj" = "padj") %>%
+  select(genes, CcoxCrhLog2FoldChange, CcoxCrhpadj)
+
+# CCO x CTS
+CCOxCTS = data.frame(lfcShrink(dds = Campy, contrast = list(c("SpeciesSmallerCcoxCts.TissueSM", "Tissue_SM_vs_EO")), type = "ashr")) %>%
+  rownames_to_column(var = "genes") %>%
+  filter(padj < 0.05) %>%
+  filter(abs(log2FoldChange) > 1) %>%
+  rename("CcoxCtsLog2FoldChange" = "log2FoldChange", "CcoxCtspadj" = "padj") %>%
+  select(genes, CcoxCtsLog2FoldChange, CcoxCtspadj)
+
+#CRH
+CRH = data.frame(lfcShrink(dds = Campy, contrast = list(c("SpeciesSmallerCrh.TissueSM", "Tissue_SM_vs_EO")), type = "ashr")) %>%
+  rownames_to_column(var = "genes") %>%
+  filter(padj < 0.05) %>%
+  filter(abs(log2FoldChange) > 1) %>%
+  rename("CrhLog2FoldChange" = "log2FoldChange", "Crhpadj" = "padj") %>%
+  select(genes, CrhLog2FoldChange, Crhpadj)
+
+#CTS
+CTS = data.frame(lfcShrink(dds = Campy, contrast = list(c("SpeciesSmallerCts.TissueSM", "Tissue_SM_vs_EO")), type = "ashr")) %>%
+  rownames_to_column(var = "genes") %>%
+  filter(padj < 0.05) %>%
+  filter(abs(log2FoldChange) > 1) %>%
+  rename("CtsLog2FoldChange" = "log2FoldChange", "Ctspadj" = "padj") %>%
+  select(genes, CtsLog2FoldChange, Ctspadj)
+```
+
+```{r}
+## Joining of result tables datasets
+
+DEG_joined_full = inner_join(x = CCO, y = CCOxCRH, by = "genes")
+DEG_joined_full = inner_join(x = DEG_joined_full, y = CCOxCTS, by = "genes")
+DEG_joined_full = inner_join(x = DEG_joined_full, y = CRH, by = "genes")
+DEG_joined_full = inner_join(x = DEG_joined_full, y = CTS, by = "genes")
+
+DEG_avg = DEG_joined_full %>%
+  select(contains("Log2FoldChange")) %>%
+  rowMeans()
+
+DEG_padj = DEG_joined_full %>%
+  select(contains("padj")) %>%
+  rowMeans()
+
+DEG_joined = DEG_joined_full %>%
+  mutate(overall_avg = DEG_avg) %>%
+  mutate(overall_padj = DEG_padj) %>%
+  select(genes, overall_avg, overall_padj)
+```
+
+
+```{r}
+alpha = 0.05
+
+DEG_joined$log_padj = -log10(DEG_joined$overall_padj)
+
+
+cols = densCols(DEG_joined$overall_avg, DEG_joined$log_padj)
+DEG_joined$pch = 19
+DEG_joined$pch[DEG_joined$pvalue ==0] = 6
+plot(DEG_joined$overall_avg, 
+     DEG_joined$log_padj, 
+     col=cols, panel.first=grid(),
+     main="Volcano Plot of SM Differential Expression with EO Baseline", 
+     xlab="Effect size: log2(fold-change)",
+     ylab="-log10(adjusted p-value)",
+     pch=DEG_joined$pch, cex=0.4)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
 ```
 
 9.  Visualize individual candidates
@@ -196,7 +378,19 @@ DE steps]
   the top candidate for the EO.
 
 ```{r}
-## YOUR CODE HERE
+lowest_padj = DEG_joined %>%
+  select(genes, overall_padj) %>%
+  arrange(overall_padj) %>%
+  head(n = 5L)
+
+highFC_gene = DEG_joined %>%
+  select(genes, overall_avg) %>%
+  arrange(overall_avg) %>%
+  tail(n =1L)
+
+Campy %>%
+  plotCounts(gene = "snap_masked-ptg001143l-processed-gene-2.56-mRNA-1", intgroup = "Tissue", normalized = TRUE, col = Campy$Tissue)
+
 ```
 
 10. Using the DESeq LRT test, evaluate whether there is an association
