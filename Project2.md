@@ -6,13 +6,6 @@
  
 ---
 
-## Project Overview
- 
-**Objective:**
-
-
----
-
 
 ## Environment & Reproducibility
  
@@ -231,72 +224,54 @@ awk '{sum += $2} END {print sum}' SRR25630382.str.tsv
 **Next steps:**
 part 4
 
-### 2026-mm-dd
+### 2026-09-10
  
 **Goal for today:**
+Work on part 4
+
+**Environment:**
+| Item | Details |
+|---|---|
+| OS | Windows 11 |
+| Compute resource | RStudio 4.6.1 |
+| Environment file location | /mnt/c/Users/HannahBalme/Desktop/Bi623_ICA/Project-2-Electric-organ-RNA-seq-analysis |
 
 **Steps performed**
-
+1. Download and read in collective htseq class data files from Talapas
+2. Filter out low count reads with cpm approach
+    - Threshold: cpm > 0.5 
+    - Transcripts passing cpm threshold must also be present in at least 2 species
+3. Normalize data twice over (once for general normalization and once for dimensionality reduction)
+4. Plot PCAs and heatmaps (see Rmd pdf for plots)
+5. Identify differentially expressed genes between every species comparison
+6. Plot with volcano plot (see Rmd pdf for plot)
+    - Note: inversed plotting by accident, EO is baseline and SM differences is what is being plotted
  
 **Commands / scripts run:**
-```bash
 
-``` 
+Collective htseq output files (shared folder in Talapas): /projects/bgmp/shared/Bi623/Project2/counts.tar
+
+Metadata file (downloaded off Canvas): Project2_RNAseq_metadata_campy.csv
+
+R Script: Project2_parts4_5.pdf
  
 **Results / Output:**
 
+*_Note: One of the skeletal muscle samples (SRR25630366 from Cco) was deviant and consistently clustered with the electric organ samples so I later removed this sample and reran steps 2 and 3 without it._*
+
+
+| Transcript with highest average fold change across all species| fold change |
+|---|---|
+|snap_masked-ptg001143l-processed-gene-2.56-mRNA-1|7.473518|
 ---
-**Next steps:**
-
-### 2026-mm-dd
- 
-**Goal for today:**
-
-**Steps performed**
-
- 
-**Commands / scripts run:**
-```bash
-
-``` 
- 
-**Results / Output:**
+<br>
 
 
-**Next steps:**
-
+| Transcripts with lowest average adjusted p-values | p-value |
+|---|---|
+|maker-ptg000555l-snap-gene-1.19-mRNA-1	|3.808088e-104|
+|maker-ptg001270l-snap-gene-47.16-mRNA-1|1.493256e-96|
+|maker-ptg000070l-snap-gene-5.18-mRNA-1	|1.846408e-80|
+|snap_masked-ptg000102l-processed-gene-12.45-mRNA-1|3.239214e-76|
+|maker-ptg000361l-snap-gene-40.32-mRNA-1|1.031235e-70|
 ---
-### 2026-mm-dd
- 
-**Goal for today:**
-
-**Steps performed**
-
- 
-**Commands / scripts run:**
-```bash
-
-``` 
- 
-**Results / Output:**
-
-
-**Next steps:**
-
----
-### 2026-09-02
- 
-**Goal for today:**
-
-**Steps performed**
-
- 
-**Commands / scripts run:**
-```bash
-
-``` 
- 
-**Results / Output:**
-
----
-**Next steps:**
